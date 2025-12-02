@@ -5379,10 +5379,31 @@
 			csi_isp = <0x11e1a300>;
 			reg = <0x00 0x5800800 0x00 0x200 0x00 0x5800000 0x00 0x800 0x00 0x5810000 0x00 0x100>;
 			interrupts = <0x00 0x8b 0x04>;
+
+			clocks = <&ccu CLK_CSI>, <&ccu CLK_PLL_VIDEO3_4X>,
+				<&ccu CLK_CSI_MASTER0>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+				<&ccu CLK_CSI_MASTER1>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+				<&ccu CLK_CSI_MASTER2>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+				<&ccu CLK_CSI_MASTER3>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+				<&ccu CLK_ISP>, <&ccu CLK_PLL_VIDEO2_4X>,
+				<&ccu CLK_BUS_CSI>, <&ccu CLK_CSI_MBUS_GATE>, <&ccu CLK_ISP_MBUS_GATE>;
+			clock-names = "csi_top", "csi_top_src",
+						"csi_mclk0", "csi_mclk0_24m", "csi_mclk0_pll",
+						"csi_mclk1", "csi_mclk1_24m", "csi_mclk1_pll",
+						"csi_mclk2", "csi_mclk2_24m", "csi_mclk2_pll",
+						"csi_mclk3", "csi_mclk3_24m", "csi_mclk3_pll",
+						"csi_isp", "csi_isp_src",
+						"csi_bus", "csi_mbus", "csi_isp_mbus";
+			resets = <&ccu RST_BUS_CSI>, <&ccu RST_BUS_ISP>;
+			reset-names = "csi_ret", "isp_ret";
+	
+			/*
 			clocks = <0x19 0xb5 0x19 0x20 0x19 0xb6 0x21 0x19 0x20 0x19 0xb7 0x21 0x19 0x20 0x19 0xb8 0x21 0x19 0x20 0x19 0xb9 0x21 0x19 0x20 0x19 0xbb 0x19 0x1d 0x19 0xba 0x19 0x5a 0x19 0x59>;
 			clock-names = "csi_top\0csi_top_src\0csi_mclk0\0csi_mclk0_24m\0csi_mclk0_pll\0csi_mclk1\0csi_mclk1_24m\0csi_mclk1_pll\0csi_mclk2\0csi_mclk2_24m\0csi_mclk2_pll\0csi_mclk3\0csi_mclk3_24m\0csi_mclk3_pll\0csi_isp\0csi_isp_src\0csi_bus\0csi_mbus\0csi_isp_mbus";
 			resets = <0x19 0x4b 0x19 0x4c>;
 			reset-names = "csi_ret\0isp_ret";
+			*/
+
 			pinctrl-names = "mclk0-default\0mclk0-sleep\0mclk1-default\0mclk1-sleep\0mclk2-default\0mclk2-sleep\0mclk3-default\0mclk3-sleep";
 			pinctrl-0 = <0xf8>;
 			pinctrl-1 = <0xf9>;
@@ -5413,12 +5434,7 @@
     				resets = <&ccu RST_BUS_CSI>;
     				reset-names = "bus";    			
 
-				//sunxi,phy-clk-type = <1>;
-    				//pinctrl-names = "default\0sleep";
-                        	//pinctrl-0 = <0x102>;
-                        	//pinctrl-1 = <0x103>;
-				
-				device_id = <0x0>;
+				device_id = <0x00>;
 				status = "okay";
 
     				port {
@@ -5468,7 +5484,6 @@
     				resets = <&ccu RST_BUS_CSI>;
     				reset-names = "bus";
     				
-				//sunxi,phy-clk-type = <1>;       /* PHY provides 125 MHz */
     				pinctrl-names = "default\0sleep";
                         	pinctrl-0 = <0x102>;
                         	pinctrl-1 = <0x103>;
