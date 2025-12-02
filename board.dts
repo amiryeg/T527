@@ -2452,18 +2452,6 @@
 				phandle = <0xe2>;
 			};
 
-			s_irrx@0 {
-				pins = "PL11";
-				function = "s_cir";
-				phandle = <0xb6>;
-			};
-
-			s_irrx@1 {
-				pins = "PL11";
-				function = "gpio_in";
-				phandle = <0xb7>;
-			};
-
 			s_spi0@0 {
 				pins = "PL10\0PL11\0PL12";
 				function = "s_spi0";
@@ -3015,23 +3003,8 @@
 				function = "gpio_in";
 				phandle = <0xb5>;
 			};
-
-			twi0@0 {
-				pins = "PD22\0PD23";
-				function = "twi0";
-				drive-strength = <0x0a>;
-				bias-pull-up;
-				phandle = <0xba>;
-			};
-
-			twi0@1 {
-				pins = "PD22\0PD23";
-				function = "gpio_in";
-				phandle = <0xbb>;
-			};
 			
 			twi2@0 {
-				function = "twi2";
 				drive-strength = <0x14>;
 				bias-pull-up;
 				phandle = <0xbe>;
@@ -4091,9 +4064,9 @@
 			compatible = "allwinner,irrx";
 			reg = <0x00 0x7040000 0x00 0x400>;
 			interrupts = <0x00 0xa7 0x04>;
-			clocks = <0x18 0x19 0x21 0x18 0x18>;
-			clock-names = "bus\0pclk\0mclk";
-			resets = <0x18 0x0d>;
+			//clocks = <0x18 0x19 0x21 0x18 0x18>;
+			//clock-names = "bus\0pclk\0mclk";
+			//resets = <0x18 0x0d>;
 			status = "disabled";
 			pinctrl-names = "default\0sleep";
 			pinctrl-0 = <0xb6>;
@@ -4120,9 +4093,9 @@
 			device_type = "twi0";
 			reg = <0x00 0x2502000 0x00 0x400>;
 			interrupts = <0x00 0x0a 0x04>;
-			clocks = <0x19 0x78>;
-			clock-names = "bus";
-			resets = <0x19 0x24>;
+			//clocks = <0x19 0x78>;
+			//clock-names = "bus";
+			//resets = <0x19 0x24>;
 			dmas = <0xb1 0x2b 0xb1 0x2b>;
 			dma-names = "tx\0rx";
 			status = "disabled";
@@ -4801,15 +4774,15 @@
                			avdd-supply = <&reg_vdd_io_1v8>;
                			dovdd-supply = <&reg_vdd_digital_1v2>;
                			dvdd-supply = <&reg_vdd_analog_2v8>;
-               			reset-gpios = <&pio PM 0 GPIO_ACTIVE_LOW>;     /* PM0 = RST */
-               			pwdn-gpios = <&pio PM 2 GPIO_ACTIVE_LOW>;     /* PM2 = PWDN */
+               			reset-gpios = <&r_pio 1 0 GPIO_ACTIVE_LOW>;     /* PM0 = RST */
+               			pwdn-gpios = <&r_pio 1 2 GPIO_ACTIVE_LOW>;     /* PM2 = PWDN */
 				status = "okay";
 
                			port {
                        			gc2053_0_out: endpoint {
-                               			bus-type = <4>;
-                               			data-lanes = <1 2>;
                                			remote-endpoint = <&mipia_in_mcsia>;
+						bus-type = <4>;
+                               			data-lanes = <1 2>;
                        			};
                			};
        			};
@@ -5430,21 +5403,29 @@
 			vind_mipipin_vol = <0x1b7740>;
 
 			csi@5820000 {
-				compatible = "allwinner,sunxi-csi";
-				reg = <0x00 0x5820000 0x00 0x1000>;
-				interrupts = <0x00 0x82 0x04>;
-				device_id = <0x00>;
-				pinctrl-names = "csi0-default\0csi0-sleep";
-                                pinctrl-0 = <0x102>;
-                                pinctrl-1 = <0x103>;
+    				compatible = "allwinner,sunxi-csi";
+    				reg = <0x0 0x5820000 0x0 0x1000>;
+    				interrupts = <0x0 0x82 0x4>;
+    				
+    				clocks = <&ccu CLK_CSI>, <&ccu CLK_CSI_MASTER0>, <&ccu CLK_BUS_CSI>;
+    				clock-names = "csi", "master", "bus";
+
+    				resets = <&ccu RST_BUS_CSI>;
+    				reset-names = "bus";    			
+
+				//sunxi,phy-clk-type = <1>;
+    				//pinctrl-names = "default\0sleep";
+                        	//pinctrl-0 = <0x102>;
+                        	//pinctrl-1 = <0x103>;
+				
+				device_id = <0x0>;
 				status = "okay";
 
-	       			port {
-               				mcsia_out: endpoint {
-                       				remote-endpoint = <&mipia_in_mcsia>;
-               				};
-       				};
-
+    				port {
+        				mcsia_out: endpoint {
+            					remote-endpoint = <&mipia_in_mcsia>;
+        				};
+    				};
 			};
 
 			csi@5821000 {
@@ -5476,20 +5457,30 @@
 
 			mipi@5810100 {
 				compatible = "allwinner,sunxi-mipi";
-				reg = <0x00 0x5810100 0x00 0x100 0x00 0x5811000 0x00 0x400>;
-				interrupts = <0x00 0x89 0x04>;
-				//pinctrl-names = "mipi0-default\0mipi0-sleep\0mipi1-4lane-default\0mipi1-4lane-sleep";
-				pinctrl-names = "mipi0-default\0mipi0-sleep";
-				pinctrl-0 = <0x102>;
-				pinctrl-1 = <0x103>;
-				device_id = <0x00>;
+    				reg = <0x0 0x5810100 0x0 0x100>, <0x0 0x5811000 0x0 0x400>;
+    				interrupts = <0x0 0x89 0x04>;
+    				
+				/* match headers: CLK_CSI = 181, CLK_BUS_CSI = 186 */
+                                clocks = <&ccu CLK_CSI>, <&ccu CLK_BUS_CSI>;
+                                clock-names = "csi", "bus";
+
+			    	/* reset ID 75 = RST_BUS_CSI */
+    				resets = <&ccu RST_BUS_CSI>;
+    				reset-names = "bus";
+    				
+				//sunxi,phy-clk-type = <1>;       /* PHY provides 125 MHz */
+    				pinctrl-names = "default\0sleep";
+                        	pinctrl-0 = <0x102>;
+                        	pinctrl-1 = <0x103>;
+
+				device_id = <0x0>;
 				status = "okay";
 
-       				port {
-               				mipia_in_mcsia: endpoint {
-                       				remote-endpoint = <&gc2053_0_out>;
-               				};
-       				};
+    				port {
+        				mipia_in_mcsia: endpoint {
+            					remote-endpoint = <&gc2053_0_out>;
+        				};
+    				};
 			};
 
 			mipi@5810200 {
@@ -5977,6 +5968,14 @@
 				compatible = "allwinner,sunxi-vin-core";
 				reg = <0x00 0x5830000 0x00 0x1000>; // this node binds to the VIN (Video Input) driver
 				interrupts = <0x00 0x7a 0x04>; // DMA + control registers
+				
+    				/* Use main VIN/CSI clocks */
+    				clocks = <&ccu CLK_CSI>, <&ccu CLK_BUS_CSI>;
+    				clock-names = "vin", "bus";
+
+    				resets = <&ccu RST_BUS_CSI>;
+    				reset-names = "vin";
+
 				vinc0_csi_sel = <0x00>; // MCSIA
 				vinc0_mipi_sel = <0x00>; // MIPIA
 				vinc0_isp_sel = <0x04>; // 0x04 = "no ISP / Bypass" (raw VIN)
