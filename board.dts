@@ -61,14 +61,6 @@
 		cir_param = "/cir_param";
 	};
 
-    /* Sensor Clocks (24MHz fixed for GC2053) */
-    clk_gc2053: gc2053-clk {
-        #clock-cells = <0>;
-        compatible = "fixed-clock";
-        clock-frequency = <24000000>;
-        clock-output-names = "gc2053_clk";
-    };
-
     /* Regulators for GC2053 (2.8V AVDD, 1.2V DVDD, 1.8V IOVDD) */
     reg_vdd_analog_2v8: vdd-analog-2v8 {
         compatible = "regulator-fixed";
@@ -4758,24 +4750,25 @@
 			dmas = <0xc6 0x0a 0xc6 0x0a>;
 			dma-names = "tx\0rx";
 			status = "okay";
-			clock-frequency = <0x61a80>;
+			clock-frequency = <100000>; //<0x61a80>;
 			pinctrl-0 = <0xdf>;
 			pinctrl-1 = <0xe0>;
 			pinctrl-names = "default\0sleep";
 			twi_drv_used = <0x01>;
 			twi-supply = <0xd6>;
-		
+			/*	
        			gc2053_0: gc2053@37 {
                			compatible = "galaxycore,gc2053_mipi";
                			reg = <0x37>;
                			csi_id = <0>;
+               			clocks = <&ccu CLK_CSI_MASTER0>;
+				clock-names = "xclk";
                			mclk = <24000000>;
-               			clocks = <&clk_gc2053>;
-               			avdd-supply = <&reg_vdd_io_1v8>;
-               			dovdd-supply = <&reg_vdd_digital_1v2>;
-               			dvdd-supply = <&reg_vdd_analog_2v8>;
-               			reset-gpios = <&r_pio 1 0 GPIO_ACTIVE_LOW>;     /* PM0 = RST */
-               			pwdn-gpios = <&r_pio 1 2 GPIO_ACTIVE_LOW>;     /* PM2 = PWDN */
+				//avdd-supply = <&reg_vdd_io_1v8>;
+               			//dovdd-supply = <&reg_vdd_digital_1v2>;
+               			//dvdd-supply = <&reg_vdd_analog_2v8>;
+               			reset-gpios = <&r_pio PM 0 GPIO_ACTIVE_LOW>;     // PM0 = RST
+               			//pwdn-gpios = <&r_pio PM 2 GPIO_ACTIVE_LOW>;     // PM2 = PWDN
 				status = "okay";
 
                			port {
@@ -4786,6 +4779,7 @@
                        			};
                			};
        			};
+			*/
 	
 		};
 
@@ -5370,79 +5364,66 @@
 		};
 
 		vind@5800800 {
-			compatible = "allwinner,sunxi-vin-media\0simple-bus";
-			#address-cells = <0x02>;
-			#size-cells = <0x02>;
-			ranges;
-			device_id = <0x00>;
-			csi_top = <0x15752a00>;
-			csi_isp = <0x11e1a300>;
-			reg = <0x00 0x5800800 0x00 0x200 0x00 0x5800000 0x00 0x800 0x00 0x5810000 0x00 0x100>;
-			interrupts = <0x00 0x8b 0x04>;
+    			compatible = "allwinner,sunxi-vin-media", "simple-bus";
+    			#address-cells = <2>;
+    			#size-cells  = <2>;
+    			ranges;
+			device_id = <0>;
+    			reg = 	<0x0 0x05800800 0x0 0x200>,
+				<0x0 0x05800000 0x0 0x800>,
+				<0x0 0x05810000 0x0 0x100>,
+				<0x0 0x02001000 0x0 0x100>; // new ccu base
+			reg-names = "vind", "vin", "debug", "ccu";
+			interrupts = <0x0 0x8b 0x4>;
+    			power-domains = <&pd1 A523_PCK_VI>;
+			dram_dfs_time = <150>;
 
-			clocks = <&ccu CLK_CSI>, <&ccu CLK_PLL_VIDEO3_4X>,
-				<&ccu CLK_CSI_MASTER0>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
-				<&ccu CLK_CSI_MASTER1>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
-				<&ccu CLK_CSI_MASTER2>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
-				<&ccu CLK_CSI_MASTER3>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
-				<&ccu CLK_ISP>, <&ccu CLK_PLL_VIDEO2_4X>,
-				<&ccu CLK_BUS_CSI>, <&ccu CLK_CSI_MBUS_GATE>, <&ccu CLK_ISP_MBUS_GATE>;
-			clock-names = "csi_top", "csi_top_src",
-						"csi_mclk0", "csi_mclk0_24m", "csi_mclk0_pll",
-						"csi_mclk1", "csi_mclk1_24m", "csi_mclk1_pll",
-						"csi_mclk2", "csi_mclk2_24m", "csi_mclk2_pll",
-						"csi_mclk3", "csi_mclk3_24m", "csi_mclk3_pll",
-						"csi_isp", "csi_isp_src",
-						"csi_bus", "csi_mbus", "csi_isp_mbus";
+    			csi_top = <360000000>;
+    			csi_isp = <300000000>;
+
+    			/* existing working regulators */
+    			vind_mclkpin-supply = <0x45>;
+    			vind_mclkpin_vol = <1800000>;
+    			vind_mcsipin-supply = <0x45>;
+    			vind_mcsipin_vol  = <1800000>;
+    			vind_mipipin-supply = <0x45>;
+    			vind_mipipin_vol  = <1800000>;
+
+    			/* core clocks & resets */
+			clocks =	<&ccu CLK_CSI>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER0>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER1>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER2>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER3>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_ISP>, <&ccu CLK_ISP>,<&ccu CLK_PLL_VIDEO2_4X>,
+					<&ccu CLK_BUS_CSI>, <&ccu CLK_CSI_MBUS_GATE>, <&ccu CLK_ISP_MBUS_GATE>,
+					<&ccu CLK_CSI>, <&ccu CLK_PLL_VIDEO3_4X>;
+			clock-names = 	"csi_top", "csi_top_src",
+					"csi_mclk0", "csi_mclk0_24m", "csi_mclk0_pll",
+					"csi_mclk1", "csi_mclk1_24m", "csi_mclk1_pll",
+					"csi_mclk2", "csi_mclk2_24m", "csi_mclk2_pll",
+					"csi_mclk3", "csi_mclk3_24m", "csi_mclk3_pll",
+					"csi_isp", "isp_bus","csi_isp_src",
+					"csi_bus", "csi_mbus", "csi_isp_mbus",
+					"csi_mipi", "csi_mipi_src";
 			resets = <&ccu RST_BUS_CSI>, <&ccu RST_BUS_ISP>;
-			reset-names = "csi_ret", "isp_ret";
+			reset-names = "csi_ret", "isp_ret";   		
 	
-			/*
-			clocks = <0x19 0xb5 0x19 0x20 0x19 0xb6 0x21 0x19 0x20 0x19 0xb7 0x21 0x19 0x20 0x19 0xb8 0x21 0x19 0x20 0x19 0xb9 0x21 0x19 0x20 0x19 0xbb 0x19 0x1d 0x19 0xba 0x19 0x5a 0x19 0x59>;
-			clock-names = "csi_top\0csi_top_src\0csi_mclk0\0csi_mclk0_24m\0csi_mclk0_pll\0csi_mclk1\0csi_mclk1_24m\0csi_mclk1_pll\0csi_mclk2\0csi_mclk2_24m\0csi_mclk2_pll\0csi_mclk3\0csi_mclk3_24m\0csi_mclk3_pll\0csi_isp\0csi_isp_src\0csi_bus\0csi_mbus\0csi_isp_mbus";
-			resets = <0x19 0x4b 0x19 0x4c>;
-			reset-names = "csi_ret\0isp_ret";
-			*/
-
-			pinctrl-names = "mclk0-default\0mclk0-sleep\0mclk1-default\0mclk1-sleep\0mclk2-default\0mclk2-sleep\0mclk3-default\0mclk3-sleep";
-			pinctrl-0 = <0xf8>;
-			pinctrl-1 = <0xf9>;
-			pinctrl-2 = <0xfa>;
-			pinctrl-3 = <0xfb>;
-			pinctrl-4 = <0xfc>;
-			pinctrl-5 = <0xfd>;
-			pinctrl-6 = <0xfe>;
-			pinctrl-7 = <0xff>;
-			power-domains = <0x1e 0x02>;
-			dram_dfs_time = <0x96>;
 			status = "okay";
-			vind_mclkpin-supply = <0x45>;
-			vind_mclkpin_vol = <0x1b7740>;
-			vind_mcsipin-supply = <0x45>;
-			vind_mcsipin_vol = <0x1b7740>;
-			vind_mipipin-supply = <0x45>;
-			vind_mipipin_vol = <0x1b7740>;
 
-			csi@5820000 {
-    				compatible = "allwinner,sunxi-csi";
-    				reg = <0x0 0x5820000 0x0 0x1000>;
-    				interrupts = <0x0 0x82 0x4>;
-    				
-    				clocks = <&ccu CLK_CSI>, <&ccu CLK_CSI_MASTER0>, <&ccu CLK_BUS_CSI>;
-    				clock-names = "csi", "master", "bus";
-
-    				resets = <&ccu RST_BUS_CSI>;
-    				reset-names = "bus";    			
-
-				device_id = <0x00>;
+			/* --- CSI controller --- */
+            		csi@5820000 {
+                		compatible = "allwinner,sunxi-csi";
+                		reg = <0x0 0x5820000 0x0 0x1000>;
+                		interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
+                		device_id = <0x00>;
 				status = "okay";
-
-    				port {
-        				mcsia_out: endpoint {
-            					remote-endpoint = <&mipia_in_mcsia>;
-        				};
-    				};
-			};
+                		port {
+                    			mcsia_out: endpoint {
+                        			remote-endpoint = <&mipia_in_mcsia>;
+                    			};
+                		};
+            		};
 
 			csi@5821000 {
 				compatible = "allwinner,sunxi-csi";
@@ -5455,9 +5436,14 @@
 			csi@5822000 {
 				compatible = "allwinner,sunxi-csi";
 				reg = <0x00 0x5822000 0x00 0x1000>;
-				interrupts = <0x00 0x84 0x04>;
+				interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
 				device_id = <0x02>;
-				status = "disabled";
+				status = "okay";
+                                port {
+                                        mcsic_out: endpoint {
+                                                remote-endpoint = <&mipic_in_mcsic>;
+                                        };
+                                };
 			};
 
 			csi@5823000 {
@@ -5471,32 +5457,22 @@
 				status = "disabled";
 			};
 
-			mipi@5810100 {
-				compatible = "allwinner,sunxi-mipi";
-    				reg = <0x0 0x5810100 0x0 0x100>, <0x0 0x5811000 0x0 0x400>;
-    				interrupts = <0x0 0x89 0x04>;
-    				
-				/* match headers: CLK_CSI = 181, CLK_BUS_CSI = 186 */
-                                clocks = <&ccu CLK_CSI>, <&ccu CLK_BUS_CSI>;
-                                clock-names = "csi", "bus";
-
-			    	/* reset ID 75 = RST_BUS_CSI */
-    				resets = <&ccu RST_BUS_CSI>;
-    				reset-names = "bus";
-    				
-    				pinctrl-names = "default\0sleep";
-                        	pinctrl-0 = <0x102>;
-                        	pinctrl-1 = <0x103>;
-
-				device_id = <0x0>;
-				status = "okay";
-
-    				port {
-        				mipia_in_mcsia: endpoint {
-            					remote-endpoint = <&gc2053_0_out>;
-        				};
-    				};
-			};
+                        /* --- MIPI D-PHY interface --- */
+                        mipi@5810100 {
+                            	compatible = "allwinner,sunxi-mipi";
+                            	reg = <0x0 0x5810100 0x0 0x100>, <0x0 0x5811000 0x0 0x400>;
+				interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+				pinctrl-names = "mipi0-default","mipi0-sleep";
+				pinctrl-0 = <0x102>;
+				pinctrl-1 = <0x103>;
+				device_id = <0x00>;
+                            	status = "okay";
+                            	port {
+                                	mipia_in_mcsia: endpoint {
+                                    		remote-endpoint = <&gc2053_0_out>;
+                                	};
+                            	};
+                        };
 
 			mipi@5810200 {
 				compatible = "allwinner,sunxi-mipi";
@@ -5510,14 +5486,17 @@
 
 			mipi@5810300 {
 				compatible = "allwinner,sunxi-mipi";
-				reg = <0x00 0x5810300 0x00 0x100 0x00 0x5811800 0x00 0x400>;
-				pinctrl-names = "mipi2-default\0mipi2-sleep\0mipi3-4lane-default\0mipi3-4lane-sleep";
+				reg = <0x00 0x5810300 0x00 0x100>, <0x00 0x5811800 0x00 0x400>;
+				pinctrl-names = "mipi2-default\0mipi2-sleep";
 				pinctrl-0 = <0x108>;
 				pinctrl-1 = <0x109>;
-				pinctrl-2 = <0x10a>;
-				pinctrl-3 = <0x10b>;
 				device_id = <0x02>;
-				status = "disabled";
+				status = "okay";
+                                port {
+                                        mipic_in_mcsic: endpoint {
+                                                remote-endpoint = <&gc2053_2_out>;
+                                        };
+                                };
 			};
 
 			mipi@5810400 {
@@ -5564,10 +5543,10 @@
 				compatible = "allwinner,sunxi-isp";
 				reg = <0x00 0x58ffff8 0x00 0x1308>;
 				interrupts = <0x00 0x87 0x04>;
-				work_mode = <0xff>;
+				work_mode = <0x00>;
 				device_id = <0x02>;
 				iommus = <0x1d 0x00 0x00>;
-				status = "disabled";
+				status = "okay";
 			};
 
 			isp@58ffff4 {
@@ -5794,92 +5773,108 @@
 				reg = <0x00 0x5812000 0x00 0x10>;
 				device_type = "sensor0";
 				compatible = "allwinner,sunxi-sensor";
-				sensor0_mname = "tp2815_mipi";
-				sensor0_twi_cci_id = <0x02>;
-				sensor0_twi_addr = <0x88>;
-				sensor0_mclk_id = <0x00>;
+				sensor0_mname = "gc2053_mipi";
+				sensor0_twi_cci_id = <0x07>;
+				sensor0_twi_addr = <0x37>;
+				sensor0_mclk_id = <0x00>; // CSI_MASTER0
 				sensor0_pos = "rear";
-				sensor0_isp_used = <0x00>;
+				sensor0_isp_used = <0x01>;
 				sensor0_fmt = <0x00>;
 				sensor0_stby_mode = <0x00>;
 				sensor0_vflip = <0x00>;
 				sensor0_hflip = <0x00>;
-				sensor0_iovdd-supply;
-				sensor0_iovdd_vol;
-				sensor0_avdd-supply;
-				sensor0_avdd_vol;
-				sensor0_dvdd-supply;
-				sensor0_dvdd_vol;
-				sensor0_power_en;
-				sensor0_reset = <0x53 0x0a 0x0b 0x01>;
-				sensor0_pwdn;
-				sensor0_sm_vs;
-				flash_handle = <0x10e>;
-				act_handle = <0x10f>;
+				sensor0_cameravdd-supply = <&reg_vdd_analog_2v8>;
+                                //sensor0_cameravdd_vol;
+				sensor0_iovdd-supply = <&reg_vdd_io_1v8>;
+				//sensor0_iovdd_vol;
+				sensor0_avdd-supply = <&reg_vdd_analog_2v8>;
+				//sensor0_avdd_vol;
+				sensor0_dvdd-supply = <&reg_vdd_digital_1v2>;
+				//sensor0_dvdd_vol;
+				//sensor0_power_en;
+				sensor0_reset = <&r_pio PM 0 GPIO_ACTIVE_LOW>;
+				//sensor0_pwdn;
+				//sensor0_sm_vs;
+				//flash_handle = <0x10e>;
+				//act_handle = <0x10f>;
 				device_id = <0x00>;
-				status = "disabled";
-				sensor0_cameravdd-supply;
-				sensor0_cameravdd_vol;
+				status = "okay";
+                                port {
+                                        gc2053_0_out: endpoint {
+                                                remote-endpoint = <&mipia_in_mcsia>;
+                                                bus-type = <4>;
+                                                data-lanes = <1 2>;
+                                        };
+                                };
 			};
 
 			sensor@5812010 {
-				reg = <0x00 0x5812010 0x00 0x10>;
+				reg = <0x0 0x05812010 0x0 0x10>;
 				device_type = "sensor1";
 				compatible = "allwinner,sunxi-sensor";
-				sensor1_mname = "nvp6158";
-				sensor1_twi_cci_id = <0x03>;
-				sensor1_twi_addr = <0x64>;
-				sensor1_mclk_id = <0x03>;
+				sensor1_mname = "ov5647";
+				sensor1_twi_cci_id = <3>;
+				sensor1_twi_addr = <0x6c>;
+				sensor1_mclk_id = <1>;
 				sensor1_pos = "front";
-				sensor1_isp_used = <0x00>;
-				sensor1_fmt = <0x00>;
-				sensor1_stby_mode = <0x00>;
-				sensor1_vflip = <0x00>;
-				sensor1_hflip = <0x00>;
-				sensor1_iovdd-supply;
-				sensor1_iovdd_vol;
-				sensor1_avdd-supply;
-				sensor1_avdd_vol;
-				sensor1_dvdd-supply;
-				sensor1_dvdd_vol;
-				sensor1_power_en;
-				sensor1_reset = <0x53 0x0a 0x0a 0x01>;
-				sensor1_pwdn;
-				sensor1_sm_vs;
-				flash_handle;
-				act_handle;
-				device_id = <0x01>;
-				status = "disabled";
+				sensor1_isp_used = <0>;
+				sensor1_fmt = <0>;
+				sensor1_stby_mode = <0>;
+				sensor1_vflip = <0>;
+				sensor1_hflip = <0>;
+				sensor1_iovdd-supply = <>;
+				sensor1_iovdd_vol = <>;
+				sensor1_avdd-supply = <>;
+				sensor1_avdd_vol = <>;
+				sensor1_dvdd-supply = <>;
+				sensor1_dvdd_vol = <>;
+				sensor1_power_en = <>;
+				sensor1_reset = <>;
+				sensor1_pwdn = <>;
+				sensor1_sm_vs = <>;
+				flash_handle = <>;
+				act_handle = <>;
+				device_id = <1>;
+				status	= "disabled";
 			};
 
 			sensor@5812020 {
 				reg = <0x00 0x5812020 0x00 0x10>;
 				device_type = "sensor2";
 				compatible = "allwinner,sunxi-sensor";
-				sensor2_mname = "imx386_mipi";
-				sensor2_twi_cci_id = <0x03>;
-				sensor2_twi_addr = <0x6c>;
-				sensor2_mclk_id = <0x01>;
-				sensor2_pos = "rear";
-				sensor2_isp_used = <0x00>;
+				sensor2_mname = "gc2053_mipi_2";
+				sensor2_twi_cci_id = <0x08>;
+				sensor2_twi_addr = <0x37>;
+				sensor2_mclk_id = <0x02>; // CSI_MASTER2
+				sensor2_pos = "front";
+				sensor2_isp_used = <0x01>;
 				sensor2_fmt = <0x00>;
 				sensor2_stby_mode = <0x00>;
 				sensor2_vflip = <0x00>;
 				sensor2_hflip = <0x00>;
-				sensor2_iovdd-supply;
-				sensor2_iovdd_vol;
-				sensor2_avdd-supply;
-				sensor2_avdd_vol;
-				sensor2_dvdd-supply;
-				sensor2_dvdd_vol;
-				sensor2_power_en;
-				sensor2_reset;
-				sensor2_pwdn;
-				sensor2_sm_vs;
-				flash_handle;
-				act_handle;
-				device_id = <0x02>;
-				status = "disabled";
+			        sensor2_cameravdd-supply = <&reg_vdd_analog_2v8>;
+        			//sensor2_cameravdd_vol;
+        			sensor2_iovdd-supply = <&reg_vdd_io_1v8>;
+        			//sensor2_iovdd_vol;
+        			sensor2_avdd-supply = <&reg_vdd_analog_2v8>;
+        			//sensor2_avdd_vol;
+        			sensor2_dvdd-supply = <&reg_vdd_digital_1v2>;
+        			//sensor2_dvdd_vol;
+        			//sensor2_power_en;
+        			sensor2_reset = <&r_pio PM 2 GPIO_ACTIVE_LOW>;
+        			//sensor2_pwdn;
+        			//sensor2_sm_vs;
+        			//flash_handle;
+        			//act_handle;
+        			device_id = <0x02>;
+       				status = "okay";
+        			port {
+                			gc2053_2_out: endpoint {
+                        			remote-endpoint = <&mipic_in_mcsic>;
+                        			bus-type = <4>;
+                        			data-lanes = <1 2>;
+                			};
+        			};
 			};
 
 			sensor@5812030 {
@@ -5978,48 +5973,41 @@
 				status = "disabled";
 			};
 
-			vinc@5830000 {
-				device_type = "vinc0"; // /dev/video0
+    			/* --- VIN core (Video input) --- */
+                        vinc@5830000 {
+				device_type = "vinc0";
 				compatible = "allwinner,sunxi-vin-core";
-				reg = <0x00 0x5830000 0x00 0x1000>; // this node binds to the VIN (Video Input) driver
-				interrupts = <0x00 0x7a 0x04>; // DMA + control registers
-				
-    				/* Use main VIN/CSI clocks */
-    				clocks = <&ccu CLK_CSI>, <&ccu CLK_BUS_CSI>;
-    				clock-names = "vin", "bus";
-
-    				resets = <&ccu RST_BUS_CSI>;
-    				reset-names = "vin";
-
+				reg = <0x0 0x05830000 0x0 0x1000>;
+				interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
 				vinc0_csi_sel = <0x00>; // MCSIA
 				vinc0_mipi_sel = <0x00>; // MIPIA
-				vinc0_isp_sel = <0x04>; // 0x04 = "no ISP / Bypass" (raw VIN)
-				vinc0_isp_tx_ch = <0x00>; // ISP transmission channel index, normally 0 when one camera
-				vinc0_tdm_rx_sel = <0x00>; // Normal (non‑TDM) single stream
-				vinc0_rear_sensor_sel = <0x00>; // One GC2053 on MCSIA, keep both 0x00
+				vinc0_isp_sel = <0x00>; // ISP0
+				vinc0_isp_tx_ch = <0x00>;
+				vinc0_tdm_rx_sel = <0x00>;
+				vinc0_rear_sensor_sel = <0x00>;
 				vinc0_front_sensor_sel = <0x00>;
-				vinc0_sensor_list = <0xff>; // Not used
-				device_id = <0x00>; // /dev/video0
-				work_mode = <0x00>; // Capture operation mode. 0x00 = normal mode
-				iommus = <0x1d 0x01 0x00>;
+				vinc0_sensor_list = <0x00>;
+				device_id = <0x00>; // DID0
+				work_mode = <0x00>;
+				iommus = <&mmu_aw 1 0>;
 				status = "okay";
-			};
+                        };
 
 			vinc@582fffc {
 				device_type = "vinc1";
 				compatible = "allwinner,sunxi-vin-core";
-				reg = <0x00 0x582fffc 0x00 0x1004>;
-				vinc1_csi_sel = <0x01>;
-				vinc1_mipi_sel = <0x02>;
-				vinc1_isp_sel = <0x01>;
-				vinc1_isp_tx_ch = <0x00>;
-				vinc1_tdm_rx_sel = <0x01>;
-				vinc1_rear_sensor_sel = <0x01>;
-				vinc1_front_sensor_sel = <0x01>;
-				vinc1_sensor_list = <0x00>;
-				device_id = <0x01>;
+				reg = <0x0 0x0582fffc 0x0 0x1004>;
+				vinc1_csi_sel = <2>;
+				vinc1_mipi_sel = <0xff>;
+				vinc1_isp_sel = <1>;
+				vinc1_isp_tx_ch = <1>;
+				vinc1_tdm_rx_sel = <1>;
+				vinc1_rear_sensor_sel = <0>;
+				vinc1_front_sensor_sel = <0>;
+				vinc1_sensor_list = <1>;
+				device_id = <1>;
 				work_mode = <0xff>;
-				iommus = <0x1d 0x01 0x00>;
+				iommus = <&mmu_aw 1 0>;
 				status = "disabled";
 			};
 
@@ -6027,18 +6015,18 @@
 				device_type = "vinc2";
 				compatible = "allwinner,sunxi-vin-core";
 				reg = <0x00 0x582fff8 0x00 0x1008>;
-				vinc2_csi_sel = <0x02>;
-				vinc2_mipi_sel = <0xff>;
-				vinc2_isp_sel = <0x02>;
-				vinc2_isp_tx_ch = <0x02>;
-				vinc2_tdm_rx_sel = <0x02>;
+				vinc2_csi_sel = <0x02>; // MCSIC
+				vinc2_mipi_sel = <0x02>; // MIPIC
+				vinc2_isp_sel = <0x02>; // ISP2
+				vinc2_isp_tx_ch = <0x00>;
+				vinc2_tdm_rx_sel = <0x00>;
 				vinc2_rear_sensor_sel = <0x00>;
 				vinc2_front_sensor_sel = <0x00>;
 				vinc2_sensor_list = <0x00>;
-				device_id = <0x02>;
-				work_mode = <0xff>;
-				iommus = <0x1d 0x01 0x00>;
-				status = "disabled";
+				device_id = <0x02>; // DID2
+				work_mode = <0x00>;
+				iommus = <&mmu_aw 1 0>;
+				status = "okay";
 			};
 
 			vinc@582fff4 {
