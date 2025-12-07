@@ -5984,9 +5984,9 @@
 				vinc0_isp_sel = <0x00>; // ISP0
 				vinc0_isp_tx_ch = <0x00>;
 				vinc0_tdm_rx_sel = <0x00>;
-				vinc0_rear_sensor_sel = <0x00>;
-				vinc0_front_sensor_sel = <0x00>;
-				vinc0_sensor_list = <0x00>;
+				vinc0_rear_sensor_sel = <0x00>; // sensor0
+				vinc0_front_sensor_sel = <0xFF>; // unused
+				vinc0_sensor_list = <0x00>; // sensor device_id=0
 				device_id = <0x00>; // DID0
 				work_mode = <0x00>;
 				iommus = <&mmu_aw 1 0>;
@@ -6020,9 +6020,9 @@
 				vinc2_isp_sel = <0x02>; // ISP2
 				vinc2_isp_tx_ch = <0x00>;
 				vinc2_tdm_rx_sel = <0x00>;
-				vinc2_rear_sensor_sel = <0x00>;
-				vinc2_front_sensor_sel = <0x00>;
-				vinc2_sensor_list = <0x00>;
+				vinc2_rear_sensor_sel = <0xFF>; // unused
+				vinc2_front_sensor_sel = <0x02>; // sensor2
+				vinc2_sensor_list = <0x02>; // sensor device_id = 2
 				device_id = <0x02>; // DID2
 				work_mode = <0x00>;
 				iommus = <&mmu_aw 1 0>;
