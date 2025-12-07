@@ -4756,31 +4756,6 @@
 			pinctrl-names = "default\0sleep";
 			twi_drv_used = <0x01>;
 			twi-supply = <0xd6>;
-			/*	
-       			gc2053_0: gc2053@37 {
-               			compatible = "galaxycore,gc2053_mipi";
-               			reg = <0x37>;
-               			csi_id = <0>;
-               			clocks = <&ccu CLK_CSI_MASTER0>;
-				clock-names = "xclk";
-               			mclk = <24000000>;
-				//avdd-supply = <&reg_vdd_io_1v8>;
-               			//dovdd-supply = <&reg_vdd_digital_1v2>;
-               			//dvdd-supply = <&reg_vdd_analog_2v8>;
-               			reset-gpios = <&r_pio PM 0 GPIO_ACTIVE_LOW>;     // PM0 = RST
-               			//pwdn-gpios = <&r_pio PM 2 GPIO_ACTIVE_LOW>;     // PM2 = PWDN
-				status = "okay";
-
-               			port {
-                       			gc2053_0_out: endpoint {
-                               			remote-endpoint = <&mipia_in_mcsia>;
-						bus-type = <4>;
-                               			data-lanes = <1 2>;
-                       			};
-               			};
-       			};
-			*/
-	
 		};
 
 		s_twi2@7081c00 {
@@ -5418,13 +5393,6 @@
                 		interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
                 		device_id = <0x00>;
 				status = "okay";
-                		/*
-				port {
-                    			mcsia_out: endpoint {
-                        			remote-endpoint = <&mipia_in_mcsia>;
-                    			};
-                		};
-				*/
     				ports {
         				#address-cells = <1>;
         				#size-cells = <0>;
@@ -5457,13 +5425,6 @@
 				interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
 				device_id = <0x02>;
 				status = "okay";
-                                /*
-				port {
-                                        mcsic_out: endpoint {
-                                                remote-endpoint = <&mipic_in_mcsic>;
-                                        };
-                                };
-				*/
 				ports {
                         		#address-cells = <1>;
                         		#size-cells = <0>;
@@ -5879,7 +5840,7 @@
 				reg = <0x00 0x5812020 0x00 0x10>;
 				device_type = "sensor2";
 				compatible = "allwinner,sunxi-sensor";
-				sensor2_mname = "gc2053_mipi_2";
+				sensor2_mname = "gc2053_mipi";
 				sensor2_twi_cci_id = <0x08>;
 				sensor2_twi_addr = <0x37>;
 				sensor2_mclk_id = <0x02>; // CSI_MASTER2
