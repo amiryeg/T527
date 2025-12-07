@@ -5418,11 +5418,29 @@
                 		interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
                 		device_id = <0x00>;
 				status = "okay";
-                		port {
+                		/*
+				port {
                     			mcsia_out: endpoint {
                         			remote-endpoint = <&mipia_in_mcsia>;
                     			};
                 		};
+				*/
+    				ports {
+        				#address-cells = <1>;
+        				#size-cells = <0>;
+        				port@0 {
+            					reg = <0>;
+            					mcsia_in: endpoint {
+                					remote-endpoint = <&mipia_out>;
+            					};
+        				};
+        				port@1 {
+            					reg = <1>;
+            					mcsia_out: endpoint {
+                					remote-endpoint = <&vin0_in>;
+            					};
+        				};
+    				};
             		};
 
 			csi@5821000 {
@@ -5439,11 +5457,30 @@
 				interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
 				device_id = <0x02>;
 				status = "okay";
-                                port {
+                                /*
+				port {
                                         mcsic_out: endpoint {
                                                 remote-endpoint = <&mipic_in_mcsic>;
                                         };
                                 };
+				*/
+				ports {
+                        		#address-cells = <1>;
+                        		#size-cells = <0>;
+
+                        		port@0 {
+                            			reg = <0>;
+                            			mcsic_in: endpoint {
+                                			remote-endpoint = <&mipic_out>;
+                            			};
+                        		};
+                        		port@1 {
+                            			reg = <1>;
+                            			mcsic_out: endpoint {
+                                			remote-endpoint = <&vin2_in>;
+                            			};
+                        		};
+                    		};
 			};
 
 			csi@5823000 {
@@ -5468,7 +5505,7 @@
 				device_id = <0x00>;
                             	status = "okay";
                             	port {
-                                	mipia_in_mcsia: endpoint {
+                                	mipia_out: endpoint {
                                     		remote-endpoint = <&gc2053_0_out>;
                                 	};
                             	};
@@ -5493,7 +5530,7 @@
 				device_id = <0x02>;
 				status = "okay";
                                 port {
-                                        mipic_in_mcsic: endpoint {
+                                        mipic_out: endpoint {
                                                 remote-endpoint = <&gc2053_2_out>;
                                         };
                                 };
@@ -5801,7 +5838,7 @@
 				status = "okay";
                                 port {
                                         gc2053_0_out: endpoint {
-                                                remote-endpoint = <&mipia_in_mcsia>;
+                                                remote-endpoint = <&mipia_out>;
                                                 bus-type = <4>;
                                                 data-lanes = <1 2>;
                                         };
@@ -5870,7 +5907,7 @@
        				status = "okay";
         			port {
                 			gc2053_2_out: endpoint {
-                        			remote-endpoint = <&mipic_in_mcsic>;
+                        			remote-endpoint = <&mipic_out>;
                         			bus-type = <4>;
                         			data-lanes = <1 2>;
                 			};
@@ -5991,7 +6028,12 @@
 				work_mode = <0x00>;
 				iommus = <&mmu_aw 1 0>;
 				status = "okay";
-                        };
+                            	port {
+        				vin0_in: endpoint {
+            					remote-endpoint = <&mcsia_out>;
+        				};
+    				};
+			};
 
 			vinc@582fffc {
 				device_type = "vinc1";
@@ -6027,6 +6069,11 @@
 				work_mode = <0x00>;
 				iommus = <&mmu_aw 1 0>;
 				status = "okay";
+    				port {
+        				vin2_in: endpoint {
+            					remote-endpoint = <&mcsic_out>;
+        				};
+    				};
 			};
 
 			vinc@582fff4 {
