@@ -2419,7 +2419,7 @@
 			s_twi1@0 {
 				pins = "PL8\0PL9";
 				function = "s_twi1";
-				drive-strength = <0x0a>;
+				drive-strength = <20>; //<0x0a>;
 				bias-pull-up;
 				phandle = <0xdf>;
 			};
@@ -2433,7 +2433,7 @@
 			s_twi2@0 {
 				pins = "PM4\0PM5";
 				function = "s_twi2";
-				drive-strength = <0x0a>;
+				drive-strength = <20>; //<0x0a>;
 				bias-pull-up;
 				phandle = <0xe1>;
 			};
@@ -4771,7 +4771,7 @@
 			dmas = <0xc6 0x0e 0xc6 0x0e>;
 			dma-names = "tx\0rx";
 			status = "okay";
-			clock-frequency = <0x61a80>;
+			clock-frequency = <100000>; //<0x61a80>;
 			pinctrl-0 = <0xe1>;
 			pinctrl-1 = <0xe2>;
 			pinctrl-names = "default\0sleep";
@@ -5393,11 +5393,22 @@
                 		interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
                 		device_id = <0x00>;
 				status = "okay";
-                		port {
-                    			mcsia_out: endpoint {
-                        			remote-endpoint = <&mipia_in_mcsia>;
-                    			};
-                		};
+    				ports {
+        				#address-cells = <1>;
+        				#size-cells = <0>;
+        				port@0 {
+            					reg = <0>;
+            					mcsia_out: endpoint { 
+							remote-endpoint = <&mipia_in_mcsia>; 
+						};
+        				};
+        				port@1 {
+            					reg = <1>;
+            					csi0_out_vin0: endpoint { 
+							remote-endpoint = <&vin0_in>; 
+						};
+        				};
+    				};
             		};
 
 			csi@5821000 {
@@ -5414,11 +5425,22 @@
 				interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
 				device_id = <0x02>;
 				status = "okay";
-                                port {
-                                        mcsic_out: endpoint {
-                                                remote-endpoint = <&mipic_in_mcsic>;
-                                        };
-                                };
+    				ports {
+        				#address-cells = <1>;
+        				#size-cells = <0>;
+        				port@0 {
+            					reg = <0>;
+            					mcsic_out: endpoint { 
+							remote-endpoint = <&mipic_in_mcsic>; 
+						};
+        				};
+        				port@1 {
+            					reg = <1>;
+            					csi2_out_vin2: endpoint { 
+							remote-endpoint = <&vin2_in>; 
+						};
+        				};
+    				};
 			};
 
 			csi@5823000 {
@@ -5498,10 +5520,11 @@
 				compatible = "allwinner,sunxi-isp";
 				reg = <0x00 0x5900000 0x00 0x1300>;
 				interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
-				work_mode = <0x00>;
+				work_mode = <0x00>; // online
 				device_id = <0x00>;
 				iommus = <&mmu_aw 0 0>;
 				status = "okay";
+				delay_init = <1>;
 			};
 
 			isp@58ffffc {
@@ -5518,10 +5541,11 @@
 				compatible = "allwinner,sunxi-isp";
 				reg = <0x00 0x58ffff8 0x00 0x1308>;
 				interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH>;
-				work_mode = <0x00>;
+				work_mode = <0x00>; // online
 				device_id = <0x02>;
 				iommus = <&mmu_aw 0 0>;
 				status = "okay";
+				delay_init = <1>;
 			};
 
 			isp@58ffff4 {
@@ -5559,7 +5583,7 @@
 				compatible = "allwinner,sunxi-scaler";
 				reg = <0x00 0x5910000 0x00 0x400>;
 				interrupts = <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>;
-				work_mode = <0x00>;
+				work_mode = <0x00>; // online
 				device_id = <0x00>;
 				iommus = <&mmu_aw 1 0>;
 				status = "okay";
@@ -5577,7 +5601,7 @@
 			scaler@590fff8 {
 				compatible = "allwinner,sunxi-scaler";
 				reg = <0x00 0x590fff8 0x00 0x408>;
-				work_mode = <0x00>;
+				work_mode = <0x00>; // online
 				device_id = <0x02>;
 				iommus = <&mmu_aw 1 0>;
 				status = "okay";
@@ -5818,8 +5842,8 @@
 				device_type = "sensor2";
 				compatible = "allwinner,sunxi-sensor";
 				sensor2_mname = "gc2053_mipi_2";
-				sensor2_twi_cci_id = <0x08>; // TWI8
-				sensor2_twi_addr = <0x37>; // 0x37
+				sensor2_twi_cci_id = <0x07>; // TWI8
+				sensor2_twi_addr = <0x3f>; // 0x37
 				sensor2_mclk_id = <0x02>; // CSI_MASTER2
 				sensor2_pos = "front";
 				sensor2_isp_used = <0x01>; // use ISP for YUV output
@@ -5956,6 +5980,7 @@
 				interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
 				vinc0_csi_sel = <0x00>; // MCSIA
 				vinc0_mipi_sel = <0x00>; // MIPIA
+				vinc0_vipp_sel = <0x00>;   // scaler0
 				vinc0_isp_sel = <0x00>; // ISP0
 				vinc0_isp_tx_ch = <0x00>; // ISP0
 				vinc0_tdm_rx_sel = <0x00>; // ISP0
@@ -5963,10 +5988,16 @@
 				vinc0_front_sensor_sel = <0x00>; // sensor0
 				vinc0_sensor_list = <0x00>; // linked sensor device_id = 0
 				device_id = <0x00>;
-				work_mode = <0x00>;
+				work_mode = <0x00>; // online
 				iommus = <&mmu_aw 1 0>;
-				delay_init = <1>;
 				status = "okay";
+				delay_init = <1>;
+    				port {
+        				reg = <0>;
+        				vin0_in: endpoint { 
+						remote-endpoint = <&csi0_out_vin0>; 
+					};
+    				};
                         };
 
 			vinc@582fffc {
@@ -5993,6 +6024,7 @@
 				reg = <0x00 0x582fff8 0x00 0x1008>;
 				vinc2_csi_sel = <0x02>; // MCSIC
 				vinc2_mipi_sel = <0x02>; // MIPIC
+				vinc2_vipp_sel = <0x02>;   // scaler2
 				vinc2_isp_sel = <0x02>; // ISP2
 				vinc2_isp_tx_ch = <0x02>; // ISP2
 				vinc2_tdm_rx_sel = <0x02>; // ISP2
@@ -6000,10 +6032,16 @@
 				vinc2_front_sensor_sel = <0x02>; // sensor2
 				vinc2_sensor_list = <0x02>; // linked sensor device_id = 2
 				device_id = <0x02>;
-				work_mode = <0x00>;
+				work_mode = <0x00>; // online
 				iommus = <&mmu_aw 1 0>;
-				delay_init = <1>;
 				status = "okay";
+				delay_init = <1>;
+    				port {
+        				reg = <0>;
+        				vin2_in: endpoint { 
+						remote-endpoint = <&csi2_out_vin2>; 
+					};
+    				};
 			};
 
 			vinc@582fff4 {
