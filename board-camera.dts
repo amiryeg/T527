@@ -1,0 +1,989 @@
+/dts-v1/;
+
+#include "sun55iw3p1.dtsi"
+
+/ {
+		// ...
+		vind@5800800 {
+    			compatible = "allwinner,sunxi-vin-media", "simple-bus";
+    			#address-cells = <2>;
+    			#size-cells  = <2>;
+    			ranges;
+			device_id = <0>;
+    			reg = 	<0x0 0x05800800 0x0 0x200>,
+				<0x0 0x05800000 0x0 0x800>,
+				<0x0 0x05810000 0x0 0x100>,
+				<0x0 0x02001000 0x0 0x100>; // new ccu base
+			reg-names = "vind", "vin", "debug", "ccu";
+			interrupts = <0x0 0x8b 0x4>;
+    			power-domains = <&pd1 A523_PCK_VI>;
+			dram_dfs_time = <150>;
+
+    			csi_top = <360000000>;
+    			csi_isp = <300000000>;
+
+    			/* existing working regulators */
+    			vind_mclkpin-supply = <0x45>;
+    			vind_mclkpin_vol = <1800000>;
+    			vind_mcsipin-supply = <0x45>;
+    			vind_mcsipin_vol  = <1800000>;
+    			vind_mipipin-supply = <0x45>;
+    			vind_mipipin_vol  = <1800000>;
+
+    			/* core clocks & resets */
+			clocks =	<&ccu CLK_CSI>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER0>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER1>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER2>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_CSI_MASTER3>, <&dcxo24M>, <&ccu CLK_PLL_VIDEO3_4X>,
+					<&ccu CLK_ISP>, <&ccu CLK_ISP>,<&ccu CLK_PLL_VIDEO2_4X>,
+					<&ccu CLK_BUS_CSI>, <&ccu CLK_CSI_MBUS_GATE>, <&ccu CLK_ISP_MBUS_GATE>,
+					<&ccu CLK_CSI>, <&ccu CLK_PLL_VIDEO3_4X>;
+			clock-names = 	"csi_top", "csi_top_src",
+					"csi_mclk0", "csi_mclk0_24m", "csi_mclk0_pll",
+					"csi_mclk1", "csi_mclk1_24m", "csi_mclk1_pll",
+					"csi_mclk2", "csi_mclk2_24m", "csi_mclk2_pll",
+					"csi_mclk3", "csi_mclk3_24m", "csi_mclk3_pll",
+					"csi_isp", "isp_bus","csi_isp_src",
+					"csi_bus", "csi_mbus", "csi_isp_mbus",
+					"csi_mipi", "csi_mipi_src";
+			resets = <&ccu RST_BUS_CSI>, <&ccu RST_BUS_ISP>;
+			reset-names = "csi_ret", "isp_ret";   		
+	
+			status = "okay";
+
+			/* --- CSI controller --- */
+            		csi@5820000 {
+                		compatible = "allwinner,sunxi-csi";
+                		reg = <0x0 0x5820000 0x0 0x1000>;
+                		interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
+                		device_id = <0x00>;
+				status = "okay";
+    				ports {
+        				#address-cells = <1>;
+        				#size-cells = <0>;
+        				port@0 {
+            					reg = <0>;
+            					mcsia_out: endpoint { 
+							remote-endpoint = <&mipia_in_mcsia>; 
+						};
+        				};
+        				port@1 {
+            					reg = <1>;
+            					csi0_out_vin0: endpoint { 
+							remote-endpoint = <&vin0_in>; 
+						};
+        				};
+    				};
+            		};
+
+			csi@5821000 {
+				compatible = "allwinner,sunxi-csi";
+				reg = <0x00 0x5821000 0x00 0x1000>;
+				interrupts = <0x00 0x83 0x04>;
+				device_id = <0x01>;
+				status = "disabled";
+			};
+
+			csi@5822000 {
+				compatible = "allwinner,sunxi-csi";
+				reg = <0x00 0x5822000 0x00 0x1000>;
+				interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
+				device_id = <0x02>;
+				status = "okay";
+    				ports {
+        				#address-cells = <1>;
+        				#size-cells = <0>;
+        				port@0 {
+            					reg = <0>;
+            					mcsic_out: endpoint { 
+							remote-endpoint = <&mipic_in_mcsic>; 
+						};
+        				};
+        				port@1 {
+            					reg = <1>;
+            					csi2_out_vin2: endpoint { 
+							remote-endpoint = <&vin2_in>; 
+						};
+        				};
+    				};
+			};
+
+			csi@5823000 {
+				compatible = "allwinner,sunxi-csi";
+				reg = <0x00 0x5823000 0x00 0x1000>;
+				interrupts = <0x00 0x93 0x04>;
+				pinctrl-names = "default\0sleep";
+				pinctrl-0 = <0x100>;
+				pinctrl-1 = <0x101>;
+				device_id = <0x03>;
+				status = "disabled";
+			};
+
+                        /* --- MIPI D-PHY interface --- */
+                        mipi@5810100 {
+                            	compatible = "allwinner,sunxi-mipi";
+                            	reg = <0x0 0x5810100 0x0 0x100>, <0x0 0x5811000 0x0 0x400>;
+				interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+				pinctrl-names = "mipi0-default","mipi0-sleep";
+				pinctrl-0 = <0x102>;
+				pinctrl-1 = <0x103>;
+				device_id = <0>;
+                            	status = "okay";
+                            	port {
+                                	mipia_in_mcsia: endpoint {
+                                    		remote-endpoint = <&gc2053_0_out>;
+                                	};
+                            	};
+                        };
+
+			mipi@5810200 {
+				compatible = "allwinner,sunxi-mipi";
+				reg = <0x00 0x5810200 0x00 0x100 0x00 0x5811400 0x00 0x400>;
+				pinctrl-names = "mipi1-default\0mipi1-sleep";
+				pinctrl-0 = <0x106>;
+				pinctrl-1 = <0x107>;
+				device_id = <0x01>;
+				status = "disabled";
+			};
+
+			mipi@5810300 {
+				compatible = "allwinner,sunxi-mipi";
+				reg = <0x00 0x5810300 0x00 0x100 0x00 0x5811800 0x00 0x400>;
+				pinctrl-names = "mipi2-default\0mipi2-sleep";
+				pinctrl-0 = <0x108>;
+				pinctrl-1 = <0x109>;
+				device_id = <0x02>;
+				status = "okay";
+                                port {
+                                        mipic_in_mcsic: endpoint {
+                                                remote-endpoint = <&gc2053_2_out>;
+                                        };
+                                };
+			};
+
+			mipi@5810400 {
+				compatible = "allwinner,sunxi-mipi";
+				reg = <0x00 0x5810400 0x00 0x100 0x00 0x5811c00 0x00 0x400>;
+				pinctrl-names = "mipi3-default\0mipi3-sleep";
+				pinctrl-0 = <0x10c>;
+				pinctrl-1 = <0x10d>;
+				device_id = <0x03>;
+				status = "disabled";
+			};
+
+			tdm@5908000 {
+				compatible = "allwinner,sunxi-tdm";
+				reg = <0x00 0x5908000 0x00 0x300>;
+				interrupts = <0x00 0x8a 0x04>;
+				work_mode = <0x00>;
+				device_id = <0x00>;
+				iommus = <0x1d 0x00 0x00>;
+				status = "okay";
+			};
+
+			isp@5900000 {
+				compatible = "allwinner,sunxi-isp";
+				reg = <0x00 0x5900000 0x00 0x1300>;
+				interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
+				work_mode = <0x00>; // online
+				device_id = <0x00>;
+				iommus = <&mmu_aw 0 0>;
+				status = "okay";
+				delay_init = <1>;
+			};
+
+			isp@58ffffc {
+				compatible = "allwinner,sunxi-isp";
+				reg = <0x00 0x58ffffc 0x00 0x1304>;
+				interrupts = <0x00 0x86 0x04>;
+				work_mode = <0xff>;
+				device_id = <0x01>;
+				iommus = <0x1d 0x00 0x00>;
+				status = "disabled";
+			};
+
+			isp@58ffff8 {
+				compatible = "allwinner,sunxi-isp";
+				reg = <0x00 0x58ffff8 0x00 0x1308>;
+				interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH>;
+				work_mode = <0x00>; // online
+				device_id = <0x02>;
+				iommus = <&mmu_aw 0 0>;
+				status = "okay";
+				delay_init = <1>;
+			};
+
+			isp@58ffff4 {
+				compatible = "allwinner,sunxi-isp";
+				reg = <0x00 0x58ffff4 0x00 0x130c>;
+				interrupts = <0x00 0x88 0x04>;
+				work_mode = <0xff>;
+				device_id = <0x03>;
+				iommus = <0x1d 0x00 0x00>;
+				status = "disabled";
+			};
+
+			isp@4 {
+				compatible = "allwinner,sunxi-isp";
+				device_id = <0x04>;
+				iommus = <0x1d 0x00 0x00>;
+				status = "disabled";
+			};
+
+			isp@5 {
+				compatible = "allwinner,sunxi-isp";
+				device_id = <0x05>;
+				iommus = <0x1d 0x00 0x00>;
+				status = "disabled";
+			};
+
+			isp@6 {
+				compatible = "allwinner,sunxi-isp";
+				device_id = <0x06>;
+				iommus = <0x1d 0x00 0x00>;
+				status = "disabled";
+			};
+
+			scaler@5910000 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x5910000 0x00 0x400>;
+				interrupts = <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>;
+				work_mode = <0x00>; // online
+				device_id = <0x00>;
+				iommus = <&mmu_aw 1 0>;
+				status = "okay";
+			};
+
+			scaler@590fffc {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x590fffc 0x00 0x404>;
+				work_mode = <0xff>;
+				device_id = <0x01>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@590fff8 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x590fff8 0x00 0x408>;
+				work_mode = <0x00>; // online
+				device_id = <0x02>;
+				iommus = <&mmu_aw 1 0>;
+				status = "okay";
+			};
+
+			scaler@590fff4 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x590fff4 0x00 0x40c>;
+				work_mode = <0xff>;
+				device_id = <0x03>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@5910400 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x5910400 0x00 0x400>;
+				interrupts = <0x00 0x7f 0x04>;
+				work_mode = <0x00>;
+				device_id = <0x04>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@59103fc {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x59103fc 0x00 0x404>;
+				work_mode = <0xff>;
+				device_id = <0x05>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@59103f8 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x59103f8 0x00 0x408>;
+				work_mode = <0xff>;
+				device_id = <0x06>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@59103f4 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x59103f4 0x00 0x40c>;
+				work_mode = <0xff>;
+				device_id = <0x07>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@5910800 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x5910800 0x00 0x400>;
+				interrupts = <0x00 0x80 0x04>;
+				work_mode = <0x00>;
+				device_id = <0x08>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@59107fc {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x59107fc 0x00 0x404>;
+				work_mode = <0xff>;
+				device_id = <0x09>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@59107f8 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x59107f8 0x00 0x408>;
+				work_mode = <0xff>;
+				device_id = <0x0a>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@59107f4 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x59107f4 0x00 0x40c>;
+				work_mode = <0xff>;
+				device_id = <0x0b>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@5910c00 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x5910c00 0x00 0x400>;
+				interrupts = <0x00 0x81 0x04>;
+				work_mode = <0x00>;
+				device_id = <0x0c>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@5910bfc {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x5910bfc 0x00 0x404>;
+				work_mode = <0xff>;
+				device_id = <0x0d>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@5910bf8 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x5910bf8 0x00 0x408>;
+				work_mode = <0xff>;
+				device_id = <0x0e>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@5910bf4 {
+				compatible = "allwinner,sunxi-scaler";
+				reg = <0x00 0x5910bf4 0x00 0x40c>;
+				work_mode = <0xff>;
+				device_id = <0x0f>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@16 {
+				compatible = "allwinner,sunxi-scaler";
+				device_id = <0x10>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			scaler@17 {
+				compatible = "allwinner,sunxi-scaler";
+				device_id = <0x11>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			actuator@2108180 {
+				compatible = "allwinner,sunxi-actuator";
+				device_type = "actuator0";
+				reg = <0x00 0x2108180 0x00 0x10>;
+				actuator0_name = "dw9714_act";
+				actuator0_slave = <0x18>;
+				actuator0_af_pwdn;
+				actuator0_afvdd = "afvcc-csi";
+				actuator0_afvdd_vol = <0x2ab980>;
+				status = "disabled";
+				phandle = <0x10f>;
+			};
+
+			flash@2108190 {
+				device_type = "flash0";
+				compatible = "allwinner,sunxi-flash";
+				reg = <0x00 0x2108190 0x00 0x10>;
+				flash0_type = <0x02>;
+				flash0_en = <0x64 0x00 0x0b 0x01>;
+				flash0_mode;
+				flash0_flvdd = [00];
+				flash0_flvdd_vol;
+				device_id = <0x00>;
+				status = "disabled";
+				phandle = <0x10e>;
+			};
+
+			sensor@5812000 {
+				reg = <0x00 0x5812000 0x00 0x10>;
+				device_type = "sensor0";
+				compatible = "allwinner,sunxi-sensor";
+				sensor0_mname = "gc2053_mipi";
+				sensor0_twi_cci_id = <0x07>; // TWI7
+				sensor0_twi_addr = <0x37>; // 0x37
+				sensor0_mclk_id = <0x00>; // CSI_MASTER0
+				sensor0_pos = "rear";
+				sensor0_isp_used = <0x01>; // use ISP for YUV output
+				sensor0_fmt = <0x00>;
+				sensor0_stby_mode = <0x00>;
+				sensor0_vflip = <0x00>;
+				sensor0_hflip = <0x00>;
+				sensor0_cameravdd-supply = <&reg_vdd_analog_2v8>;
+                                //sensor0_cameravdd_vol;
+				sensor0_iovdd-supply = <&reg_vdd_io_1v8>;
+				//sensor0_iovdd_vol;
+				sensor0_avdd-supply = <&reg_vdd_analog_2v8>;
+				//sensor0_avdd_vol;
+				sensor0_dvdd-supply = <&reg_vdd_digital_1v2>;
+				//sensor0_dvdd_vol;
+				//sensor0_power_en;
+				sensor0_reset = <&r_pio PM 0 GPIO_ACTIVE_LOW>;
+				//sensor0_pwdn;
+				//sensor0_sm_vs;
+				//flash_handle = <0x10e>;
+				//act_handle = <0x10f>;
+				device_id = <0x00>;
+				status = "okay";
+                                port {
+                                        gc2053_0_out: endpoint {
+                                                remote-endpoint = <&mipia_in_mcsia>;
+                                                bus-type = <4>;
+                                                data-lanes = <1 2>;
+                                        };
+                                };
+			};
+
+			sensor@5812010 {
+				reg = <0x00 0x5812010 0x00 0x10>;
+				device_type = "sensor1";
+				compatible = "allwinner,sunxi-sensor";
+				sensor1_mname = "nvp6158";
+				sensor1_twi_cci_id = <0x03>;
+				sensor1_twi_addr = <0x64>;
+				sensor1_mclk_id = <0x03>;
+				sensor1_pos = "front";
+				sensor1_isp_used = <0x00>;
+				sensor1_fmt = <0x00>;
+				sensor1_stby_mode = <0x00>;
+				sensor1_vflip = <0x00>;
+				sensor1_hflip = <0x00>;
+				sensor1_iovdd-supply;
+				sensor1_iovdd_vol;
+				sensor1_avdd-supply;
+				sensor1_avdd_vol;
+				sensor1_dvdd-supply;
+				sensor1_dvdd_vol;
+				sensor1_power_en;
+				sensor1_reset = <0x53 0x0a 0x0a 0x01>;
+				sensor1_pwdn;
+				sensor1_sm_vs;
+				flash_handle;
+				act_handle;
+				device_id = <0x01>;
+				status = "disabled";
+			};
+
+			sensor@5812020 {
+				reg = <0x00 0x5812020 0x00 0x10>;
+				device_type = "sensor2";
+				compatible = "allwinner,sunxi-sensor";
+				sensor2_mname = "gc2053_mipi_2";
+				sensor2_twi_cci_id = <0x07>; // TWI8
+				sensor2_twi_addr = <0x3f>; // 0x37
+				sensor2_mclk_id = <0x02>; // CSI_MASTER2
+				sensor2_pos = "front";
+				sensor2_isp_used = <0x01>; // use ISP for YUV output
+				sensor2_fmt = <0x00>;
+				sensor2_stby_mode = <0x00>;
+				sensor2_vflip = <0x00>;
+				sensor2_hflip = <0x00>;
+                                sensor2_cameravdd-supply = <&reg_vdd_analog_2v8>;
+                                //sensor2_cameravdd_vol;
+                                sensor2_iovdd-supply = <&reg_vdd_io_1v8>;
+                                //sensor2_iovdd_vol;
+                                sensor2_avdd-supply = <&reg_vdd_analog_2v8>;
+                                //sensor2_avdd_vol;
+                                sensor2_dvdd-supply = <&reg_vdd_digital_1v2>;
+                                //sensor2_dvdd_vol;
+                                //sensor2_power_en;
+				sensor2_reset = <&r_pio PM 2 GPIO_ACTIVE_LOW>;
+				//sensor2_pwdn;
+				//sensor2_sm_vs;
+				//flash_handle;
+				//act_handle;
+				device_id = <0x02>;
+				status = "okay";
+			        port {
+                                        gc2053_2_out: endpoint {
+                                                remote-endpoint = <&mipic_in_mcsic>;
+                                                bus-type = <4>;
+                                                data-lanes = <1 2>;
+                                        };
+                                };
+			};
+
+			sensor@5812030 {
+				reg = <0x00 0x5812030 0x00 0x10>;
+				device_type = "sensor3";
+				compatible = "allwinner,sunxi-sensor";
+				sensor3_mname = "imx317_mipi";
+				sensor3_twi_cci_id = <0x03>;
+				sensor3_twi_addr = <0x6c>;
+				sensor3_mclk_id = <0x01>;
+				sensor3_pos = "rear";
+				sensor3_isp_used = <0x00>;
+				sensor3_fmt = <0x00>;
+				sensor3_stby_mode = <0x00>;
+				sensor3_vflip = <0x00>;
+				sensor3_hflip = <0x00>;
+				sensor3_iovdd-supply;
+				sensor3_iovdd_vol;
+				sensor3_avdd-supply;
+				sensor3_avdd_vol;
+				sensor3_dvdd-supply;
+				sensor3_dvdd_vol;
+				sensor3_power_en;
+				sensor3_reset;
+				sensor3_pwdn;
+				sensor3_sm_vs;
+				flash_handle;
+				act_handle;
+				device_id = <0x02>;
+				status = "disabled";
+			};
+
+			sensor_list@5812040 {
+				reg = <0x00 0x5812040 0x00 0x10>;
+				device_type = "sensor_list0";
+				compatible = "allwinner,sunxi-sensor-list";
+				csi_sel = <0x00>;
+				sensor00_mname = "ov5675_mipi_b";
+				sensor00_twi_addr = <0x60>;
+				sensor00_type = <0x01>;
+				sensor00_hflip = <0x01>;
+				sensor00_vflip = <0x00>;
+				sensor00_act_used = <0x01>;
+				sensor00_act_name = "dw9714_act";
+				sensor00_act_twi_addr = <0x18>;
+				sensor01_mname = "gc05a2_mipi_b";
+				sensor01_twi_addr = <0x62>;
+				sensor01_type = <0x01>;
+				sensor01_hflip = <0x00>;
+				sensor01_vflip = <0x00>;
+				sensor01_act_used = <0x01>;
+				sensor01_act_name = "dw9714_act";
+				sensor01_act_twi_addr = <0x18>;
+				sensor02_mname = "gc5035_mipi_b";
+				sensor02_twi_addr = <0x64>;
+				sensor02_type = <0x01>;
+				sensor02_hflip = <0x00>;
+				sensor02_vflip = <0x00>;
+				sensor02_act_used = <0x01>;
+				sensor02_act_name = "dw9714_act";
+				sensor02_act_twi_addr = <0x18>;
+				device_id = <0x00>;
+				status = "disabled";
+			};
+
+			sensor_list@5812050 {
+				reg = <0x00 0x5812050 0x00 0x10>;
+				device_type = "sensor_list1";
+				compatible = "allwinner,sunxi-sensor-list";
+				csi_sel = <0x00>;
+				sensor10_mname = "ov02a10_mipi_f";
+				sensor10_twi_addr = <0x70>;
+				sensor10_type = <0x01>;
+				sensor10_hflip = <0x01>;
+				sensor10_vflip = <0x00>;
+				sensor10_act_used = <0x00>;
+				sensor10_act_name = [00];
+				sensor10_act_twi_addr;
+				sensor11_mname = "gc02m1_mipi_f";
+				sensor11_twi_addr = <0x72>;
+				sensor11_type = <0x01>;
+				sensor11_hflip = <0x01>;
+				sensor11_vflip = <0x00>;
+				sensor11_act_used = <0x00>;
+				sensor11_act_name = [00];
+				sensor11_act_twi_addr;
+				sensor12_mname = "gc02m2_mipi_f";
+				sensor12_twi_addr = <0x74>;
+				sensor12_type = <0x01>;
+				sensor12_hflip = <0x00>;
+				sensor12_vflip = <0x00>;
+				sensor12_act_used = <0x00>;
+				sensor12_act_name = [00];
+				sensor12_act_twi_addr;
+				device_id = <0x01>;
+				status = "disabled";
+			};
+
+    			/* --- VIN core (Video input) --- */
+                        vinc@5830000 {
+				device_type = "vinc0";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x0 0x05830000 0x0 0x1000>;
+				interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
+				vinc0_csi_sel = <0x00>; // MCSIA
+				vinc0_mipi_sel = <0x00>; // MIPIA
+				vinc0_vipp_sel = <0x00>;   // scaler0
+				vinc0_isp_sel = <0x00>; // ISP0
+				vinc0_isp_tx_ch = <0x00>; // ISP0
+				vinc0_tdm_rx_sel = <0x00>; // ISP0
+				vinc0_rear_sensor_sel = <0x00>; // sensor0
+				vinc0_front_sensor_sel = <0x00>; // sensor0
+				vinc0_sensor_list = <0x00>; // linked sensor device_id = 0
+				device_id = <0x00>;
+				work_mode = <0x00>; // online
+				iommus = <&mmu_aw 1 0>;
+				status = "okay";
+				delay_init = <1>;
+    				port {
+        				reg = <0>;
+        				vin0_in: endpoint { 
+						remote-endpoint = <&csi0_out_vin0>; 
+					};
+    				};
+                        };
+
+			vinc@582fffc {
+				device_type = "vinc1";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x582fffc 0x00 0x1004>;
+				vinc1_csi_sel = <0x01>;
+				vinc1_mipi_sel = <0x02>;
+				vinc1_isp_sel = <0x01>;
+				vinc1_isp_tx_ch = <0x00>;
+				vinc1_tdm_rx_sel = <0x01>;
+				vinc1_rear_sensor_sel = <0x01>;
+				vinc1_front_sensor_sel = <0x01>;
+				vinc1_sensor_list = <0x00>;
+				device_id = <0x01>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@582fff8 {
+				device_type = "vinc2";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x582fff8 0x00 0x1008>;
+				vinc2_csi_sel = <0x02>; // MCSIC
+				vinc2_mipi_sel = <0x02>; // MIPIC
+				vinc2_vipp_sel = <0x02>;   // scaler2
+				vinc2_isp_sel = <0x02>; // ISP2
+				vinc2_isp_tx_ch = <0x02>; // ISP2
+				vinc2_tdm_rx_sel = <0x02>; // ISP2
+				vinc2_rear_sensor_sel = <0x02>; // sensor2
+				vinc2_front_sensor_sel = <0x02>; // sensor2
+				vinc2_sensor_list = <0x02>; // linked sensor device_id = 2
+				device_id = <0x02>;
+				work_mode = <0x00>; // online
+				iommus = <&mmu_aw 1 0>;
+				status = "okay";
+				delay_init = <1>;
+    				port {
+        				reg = <0>;
+        				vin2_in: endpoint { 
+						remote-endpoint = <&csi2_out_vin2>; 
+					};
+    				};
+			};
+
+			vinc@582fff4 {
+				device_type = "vinc3";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x582fff4 0x00 0x100c>;
+				vinc3_csi_sel = <0x00>;
+				vinc3_mipi_sel = <0xff>;
+				vinc3_isp_sel = <0x00>;
+				vinc3_isp_tx_ch = <0x00>;
+				vinc3_tdm_rx_sel = <0x00>;
+				vinc3_rear_sensor_sel = <0x01>;
+				vinc3_front_sensor_sel = <0x01>;
+				vinc3_sensor_list = <0x00>;
+				device_id = <0x03>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5831000 {
+				device_type = "vinc4";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5831000 0x00 0x1000>;
+				interrupts = <0x00 0x7b 0x04>;
+				vinc4_csi_sel = <0x00>;
+				vinc4_mipi_sel = <0x00>;
+				vinc4_isp_sel = <0x04>;
+				vinc4_isp_tx_ch = <0x01>;
+				vinc4_tdm_rx_sel = <0x00>;
+				vinc4_rear_sensor_sel = <0x00>;
+				vinc4_front_sensor_sel = <0x00>;
+				vinc4_sensor_list = <0x00>;
+				device_id = <0x04>;
+				work_mode = <0x00>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5830ffc {
+				device_type = "vinc5";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5830ffc 0x00 0x1004>;
+				vinc5_csi_sel = <0x02>;
+				vinc5_mipi_sel = <0xff>;
+				vinc5_isp_sel = <0x01>;
+				vinc5_isp_tx_ch = <0x01>;
+				vinc5_tdm_rx_sel = <0x01>;
+				vinc5_rear_sensor_sel = <0x00>;
+				vinc5_front_sensor_sel = <0x00>;
+				vinc5_sensor_list = <0x00>;
+				device_id = <0x05>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5830ff8 {
+				device_type = "vinc6";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5830ff8 0x00 0x1008>;
+				vinc6_csi_sel = <0x02>;
+				vinc6_mipi_sel = <0xff>;
+				vinc6_isp_sel = <0x00>;
+				vinc6_isp_tx_ch = <0x00>;
+				vinc6_tdm_rx_sel = <0x00>;
+				vinc6_rear_sensor_sel = <0x00>;
+				vinc6_front_sensor_sel = <0x00>;
+				vinc6_sensor_list = <0x00>;
+				device_id = <0x06>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5830ff4 {
+				device_type = "vinc7";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5830ff4 0x00 0x100c>;
+				vinc7_csi_sel = <0x02>;
+				vinc7_mipi_sel = <0xff>;
+				vinc7_isp_sel = <0x00>;
+				vinc7_isp_tx_ch = <0x00>;
+				vinc7_tdm_rx_sel = <0x00>;
+				vinc7_rear_sensor_sel = <0x00>;
+				vinc7_front_sensor_sel = <0x00>;
+				vinc7_sensor_list = <0x00>;
+				device_id = <0x07>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5832000 {
+				device_type = "vinc8";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5832000 0x00 0x1000>;
+				interrupts = <0x00 0x7c 0x04>;
+				vinc8_csi_sel = <0x00>;
+				vinc8_mipi_sel = <0x00>;
+				vinc8_isp_sel = <0x04>;
+				vinc8_isp_tx_ch = <0x02>;
+				vinc8_tdm_rx_sel = <0x00>;
+				vinc8_rear_sensor_sel = <0x00>;
+				vinc8_front_sensor_sel = <0x00>;
+				vinc8_sensor_list = <0x00>;
+				device_id = <0x08>;
+				work_mode = <0x00>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5831ffc {
+				device_type = "vinc9";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5831ffc 0x00 0x1004>;
+				vinc9_csi_sel = <0x02>;
+				vinc9_mipi_sel = <0xff>;
+				vinc9_isp_sel = <0x00>;
+				vinc9_isp_tx_ch = <0x00>;
+				vinc9_tdm_rx_sel = <0x00>;
+				vinc9_rear_sensor_sel = <0x00>;
+				vinc9_front_sensor_sel = <0x00>;
+				vinc9_sensor_list = <0x00>;
+				device_id = <0x09>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5831ff8 {
+				device_type = "vinc10";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5831ff8 0x00 0x1008>;
+				vinc10_csi_sel = <0x02>;
+				vinc10_mipi_sel = <0xff>;
+				vinc10_isp_sel = <0x00>;
+				vinc10_isp_tx_ch = <0x00>;
+				vinc10_tdm_rx_sel = <0x00>;
+				vinc10_rear_sensor_sel = <0x00>;
+				vinc10_front_sensor_sel = <0x00>;
+				vinc10_sensor_list = <0x00>;
+				device_id = <0x0a>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5831ff4 {
+				device_type = "vinc11";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5831ff4 0x00 0x100c>;
+				vinc11_csi_sel = <0x02>;
+				vinc11_mipi_sel = <0xff>;
+				vinc11_isp_sel = <0x00>;
+				vinc11_isp_tx_ch = <0x00>;
+				vinc11_tdm_rx_sel = <0x00>;
+				vinc11_rear_sensor_sel = <0x00>;
+				vinc11_front_sensor_sel = <0x00>;
+				vinc11_sensor_list = <0x00>;
+				device_id = <0x0b>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5833000 {
+				device_type = "vinc12";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5833000 0x00 0x1000>;
+				interrupts = <0x00 0x7d 0x04>;
+				vinc12_csi_sel = <0x00>;
+				vinc12_mipi_sel = <0x00>;
+				vinc12_isp_sel = <0x04>;
+				vinc12_isp_tx_ch = <0x03>;
+				vinc12_tdm_rx_sel = <0x00>;
+				vinc12_rear_sensor_sel = <0x00>;
+				vinc12_front_sensor_sel = <0x00>;
+				vinc12_sensor_list = <0x00>;
+				device_id = <0x0c>;
+				work_mode = <0x00>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5832ffc {
+				device_type = "vinc13";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5832ffc 0x00 0x1004>;
+				vinc13_csi_sel = <0x02>;
+				vinc13_mipi_sel = <0xff>;
+				vinc13_isp_sel = <0x00>;
+				vinc13_isp_tx_ch = <0x00>;
+				vinc13_tdm_rx_sel = <0x00>;
+				vinc13_rear_sensor_sel = <0x00>;
+				vinc13_front_sensor_sel = <0x00>;
+				vinc13_sensor_list = <0x00>;
+				device_id = <0x0d>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5832ff8 {
+				device_type = "vinc14";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5832ff8 0x00 0x1008>;
+				vinc14_csi_sel = <0x02>;
+				vinc14_mipi_sel = <0xff>;
+				vinc14_isp_sel = <0x00>;
+				vinc14_isp_tx_ch = <0x00>;
+				vinc14_tdm_rx_sel = <0x00>;
+				vinc14_rear_sensor_sel = <0x00>;
+				vinc14_front_sensor_sel = <0x00>;
+				vinc14_sensor_list = <0x00>;
+				device_id = <0x0e>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5832ff4 {
+				device_type = "vinc15";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5832ff4 0x00 0x100c>;
+				vinc15_csi_sel = <0x02>;
+				vinc15_mipi_sel = <0xff>;
+				vinc15_isp_sel = <0x00>;
+				vinc15_isp_tx_ch = <0x00>;
+				vinc15_tdm_rx_sel = <0x00>;
+				vinc15_rear_sensor_sel = <0x00>;
+				vinc15_front_sensor_sel = <0x00>;
+				vinc15_sensor_list = <0x00>;
+				device_id = <0x0f>;
+				work_mode = <0xff>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5834000 {
+				device_type = "vinc16";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5834000 0x00 0x1000>;
+				interrupts = <0x00 0x91 0x04>;
+				vinc16_csi_sel = <0x03>;
+				vinc16_mipi_sel = <0xff>;
+				vinc16_isp_sel = <0x05>;
+				vinc16_isp_tx_ch = <0x00>;
+				vinc16_tdm_rx_sel = <0x00>;
+				vinc16_rear_sensor_sel = <0x01>;
+				vinc16_front_sensor_sel = <0x01>;
+				vinc16_sensor_list = <0x00>;
+				device_id = <0x10>;
+				work_mode = <0x00>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+
+			vinc@5835000 {
+				device_type = "vinc17";
+				compatible = "allwinner,sunxi-vin-core";
+				reg = <0x00 0x5835000 0x00 0x1000>;
+				interrupts = <0x00 0x92 0x04>;
+				vinc17_csi_sel = <0x03>;
+				vinc17_mipi_sel = <0xff>;
+				vinc17_isp_sel = <0x05>;
+				vinc17_isp_tx_ch = <0x01>;
+				vinc17_tdm_rx_sel = <0x00>;
+				vinc17_rear_sensor_sel = <0x01>;
+				vinc17_front_sensor_sel = <0x01>;
+				vinc17_sensor_list = <0x00>;
+				device_id = <0x11>;
+				work_mode = <0x00>;
+				iommus = <0x1d 0x01 0x00>;
+				status = "disabled";
+			};
+		};
+		// ...
+}
